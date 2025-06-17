@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Resolver Desigualdades</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+    }
+    h2 {
+      text-align: center;
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 16px;
+    }
+    #resultado {
+      margin-top: 20px;
+      background-color: #fff;
+      padding: 15px;
+      border-left: 5px solid #007bff;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Resolución de Desigualdades</h2>
+
+  <label for="desigualdad">Ingresa una desigualdad (ej: x^2 - 4x + 3 &gt;= 0):</label>
+  <input type="text" id="desigualdad" placeholder="Ej: x^2 - 4x + 3 >= 0" />
+
+  <button onclick="resolverDesigualdad()">Resolver</button>
+
+  <div id="resultado"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/nerdamer/1.1.9/nerdamer.core.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/nerdamer/1.1.9/Algebra.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/nerdamer/1.1.9/Solve.min.js"></script>
+
+  <script>
+    function resolverDesigualdad() {
+      const entrada = document.getElementById("desigualdad").value.replace(/\s+/g, '');
+      const resultado = document.getElementById("resultado");
+      const operadores = ['>=', '<=', '>', '<'];
+
+      let op = operadores.find(o => entrada.includes(o));
+      if (!op) {
+        resultado.innerHTML = "❌ Error: operador no válido. Usa <, <=, > o >=.";
+        return;
+      }
+
+      const partes = entrada.split(op);
+      if (partes.length !== 2) {
+        resultado.innerHTML = "❌ Error: formato inválido.";
+        return;
+      }
+
+      const lhs = partes[0];
+      const rhs = partes[1];
+
+      try {
+        const ecuacion = `${lhs} - (${rhs})`;
+        const expr = nerdamer(ecuacion).expand().toString();
+
+        // Intentar resolver como ecuación para obtener raíces
+        const soluciones = nerdamer.solve(expr, 'x');
+        let r1 = parseFloat(soluciones[0]);
+        let r2 = soluciones[1] ? parseFloat(soluciones[1]) : null;
+
+        let solucion = "";
+        if (r2 !== null) {
+          if (op === ">") solucion = `x < ${Math.min(r1, r2)} o x > ${Math.max(r1, r2)}`;
+          else if (op === ">=") solucion = `x ≤ ${Math.min(r1, r2)} o x ≥ ${Math.max(r1, r2)}`;
+          else if (op === "<") solucion = `${Math.min(r1, r2)} < x < ${Math.max(r1, r2)}`;
+          else if (op === "<=") solucion = `${Math.min(r1, r2)} ≤ x ≤ ${Math.max(r1, r2)}`;
+        } else {
+          // Ecuación lineal con una sola raíz
+          r1 = parseFloat(soluciones[0]);
+          if (op === ">") solucion = `x > ${r1}`;
+          else if (op === ">=") solucion = `x ≥ ${r1}`;
+          else if (op === "<") solucion = `x < ${r1}`;
+          else if (op === "<=") solucion = `x ≤ ${r1}`;
+        }
+
+        resultado.innerHTML = `✅ <strong>Solución:</strong> ${solucion}`;
+      } catch (e) {
+        resultado.innerHTML = "❌ Error al procesar la desigualdad.";
+      }
+    }
+  </script>
+
+</body>
+</html>
