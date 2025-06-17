@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Solucionador de Desigualdades</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+      background-color: #f2f2f2;
+    }
+    input, button {
+      font-size: 16px;
+      margin: 10px 0;
+      padding: 8px;
+      width: 100%;
+    }
+    #resultado {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: white;
+      border-left: 4px solid #007bff;
+    }
+  </style>
+</head>
+<body>
+
+<h2>Solucionador de Desigualdades Lineales y Cuadráticas</h2>
+
+<label for="desigualdad">Ingresa una desigualdad (ej: x^2 - 4x + 3 ≥ 0):</label>
+<input type="text" id="desigualdad" placeholder="Ejemplo: 2x + 3 < 5" />
+
+<button onclick="resolverDesigualdad()">Resolver</button>
+
+<div id="resultado"></div>
+
+<script>
+function resolverDesigualdad() {
+  const input = document.getElementById("desigualdad").value.replace(/\s+/g, '');
+  const resultadoDiv = document.getElementById("resultado");
+  try {
+    const operadores = ['<', '<=', '>', '>='];
+    let operador = operadores.find(op => input.includes(op));
+    if (!operador) throw "No se encontró un operador válido";
+
+    const [lhs, rhs] = input.split(operador);
+    const ecuacion = lhs + '-(' + rhs + ')';
+
+    // Convertimos ^ a ** para JavaScript
+    const expresion = ecuacion.replace(/\^/g, '**');
+    const exprFuncion = new Function('x', `return ${expresion};`);
+
+    // Detectar si es lineal o cuadrática según el grado
+    const grado = expresion.includes('x**2') ? 2 : 1;
+
+    let solucion = "";
+
+    if (grado === 1) {
+      // Resolver como desigualdad lineal
+      const pasos = nerdamer.solveEquations(`${lhs}=${rhs}`, 'x');
+      const valor = parseFloat(pasos.text());
+      if (operador === '<') solucion = `x < ${valor}`;
+      else if (operador === '<=') solucion = `x ≤ ${valor}`;
+      else if (operador === '>') solucion = `x > ${valor}`;
+      else if (operador === '>=') solucion = `x ≥ ${valor}`;
+    } else {
+      // Resolver como cuadrática
+      const roots = nerdamer.solveEquations(`${lhs}=${rhs}`, 'x');
+      const a = parseFloat(roots[0].text());
+      const b = parseFloat(roots[1].text());
+      const [r1, r2] = a < b ? [a, b] : [b, a];
+
+      switch (operador) {
+        case '>':  solucion = `x < ${r1} o x > ${r2}`; break;
+        case '>=': solucion = `x ≤ ${r1} o x ≥ ${r2}`; break;
+        case '<':  solucion = `${r1} < x < ${r2}`; break;
+        case '<=': solucion = `${r1} ≤ x ≤ ${r2}`; break;
+      }
+    }
+
+    resultadoDiv.innerHTML = `<strong>Solución:</strong> ${solucion}`;
+  } catch (e) {
+    resultadoDiv.innerHTML = `<strong>Error:</strong> ${e}`;
+  }
+}
+</script>
+
+<!-- Librería Nerdamer para álgebra simbólica -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/nerdamer/1.1.9/nerdamer.core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/nerdamer/1.1.9/Algebra.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/nerdamer/1.1.9/Solve.min.js"></script>
+
+</body>
+</html>
